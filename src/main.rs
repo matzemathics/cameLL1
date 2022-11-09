@@ -414,15 +414,6 @@ impl<'a> From<&'static str> for CharStream<Chars<'a>> {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-struct CharLabel(char);
-
-impl<'a> From<&'a char> for CharLabel {
-    fn from(value: &'a char) -> Self {
-        CharLabel(*value)
-    }
-}
-
 impl<T: Iterator<Item = char>> Iterator for CharStream<T> {
     type Item = char;
 
