@@ -1,4 +1,4 @@
-#![feature(drain_filter, anonymous_lifetime_in_impl_trait, array_windows, iter_collect_into)]
+#![feature(drain_filter, array_windows, iter_collect_into)]
 
 use std::collections::VecDeque;
 use std::fmt::Debug;
