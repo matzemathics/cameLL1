@@ -340,18 +340,18 @@ enum ParseTree<Nt, Tok> {
 
 trait TokenStream: Iterator
 where
-    Self::Lable: Lable<Self::Item>
+    Self::Label: Label<Self::Item>
 {
-    type Lable;
+    type Label;
 
-    fn peek_label(&mut self) -> Option<Self::Lable>;
+    fn peek_label(&mut self) -> Option<Self::Label>;
 }
 
-trait Lable<T>: Eq+Hash+Copy {
+trait Label<T>: Eq+Hash+Copy {
     fn get_label(value: &T) -> Self;
 }
 
-impl<T: Copy+Eq+Hash> Lable<T> for T {
+impl<T: Copy+Eq+Hash> Label<T> for T {
     fn get_label(value: &T) -> Self {
         *value
     }
@@ -359,8 +359,8 @@ impl<T: Copy+Eq+Hash> Lable<T> for T {
 
 trait IntoTokenStream<L>
 where
-    L: Lable<Self::Item>,
-    Self::IntoTokenStream: TokenStream<Lable = L, Item = Self::Item>,
+    L: Label<Self::Item>,
+    Self::IntoTokenStream: TokenStream<Label = L, Item = Self::Item>,
 {
     type Item;
     type IntoTokenStream;
@@ -368,12 +368,12 @@ where
     fn into_token_stream(self) -> Self::IntoTokenStream;
 }
 
-struct LabledStream<T, L> {
+struct LabeldStream<T, L> {
     inner: Peekable<std::vec::IntoIter<T>>,
     phantom: PhantomData<L>
 }
 
-impl<T, L> Iterator for LabledStream<T, L>
+impl<T, L> Iterator for LabeldStream<T, L>
 {
     type Item = T;
 
@@ -382,24 +382,24 @@ impl<T, L> Iterator for LabledStream<T, L>
     }
 }
 
-impl<T, L> TokenStream for LabledStream<T, L>
-where L: Lable<T>
+impl<T, L> TokenStream for LabeldStream<T, L>
+where L: Label<T>
 {
-    type Lable = L;
+    type Label = L;
 
-    fn peek_label(&mut self) -> Option<Self::Lable> {
+    fn peek_label(&mut self) -> Option<Self::Label> {
         self.inner.peek().map(|t| L::get_label(t))
     }
 }
 
-impl<T, L: Lable<T>> IntoTokenStream<L> for Vec<T>
+impl<T, L: Label<T>> IntoTokenStream<L> for Vec<T>
 {
     type Item = T;
 
-    type IntoTokenStream = LabledStream<T, L>;
+    type IntoTokenStream = LabeldStream<T, L>;
 
     fn into_token_stream(self) -> Self::IntoTokenStream {
-        LabledStream {
+        LabeldStream {
             inner: self.into_iter().peekable(),
             phantom: PhantomData {}
         }
@@ -415,11 +415,11 @@ impl<'a> From<&'static str> for CharStream<Chars<'a>> {
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-struct CharLable(char);
+struct CharLabel(char);
 
-impl<'a> From<&'a char> for CharLable {
+impl<'a> From<&'a char> for CharLabel {
     fn from(value: &'a char) -> Self {
-        CharLable(*value)
+        CharLabel(*value)
     }
 }
 
@@ -432,9 +432,9 @@ impl<T: Iterator<Item = char>> Iterator for CharStream<T> {
 }
 
 impl<T: Iterator<Item = char>> TokenStream for CharStream<T> {
-    type Lable = char;
+    type Label = char;
 
-    fn peek_label(&mut self) -> Option<Self::Lable> {
+    fn peek_label(&mut self) -> Option<Self::Label> {
         self.0.peek().copied()
     }
 }
@@ -465,8 +465,8 @@ where
 
     fn parse<T, I>(&self, stream: &mut T, start: Nt) -> Option<ParseTree<Nt, I>>
     where
-        T: TokenStream<Lable = Tok, Item = I>,
-        Tok: Lable<I>+Debug
+        T: TokenStream<Label = Tok, Item = I>,
+        Tok: Label<I>+Debug
     {
         let mut children = Vec::new();
 
@@ -539,7 +539,7 @@ impl Inexhaustible for char {
 mod test {
     use either::Either;
     use std::{collections::{HashMap, HashSet}};
-    use crate::{ParserEntry, ParseTree, Parser, CharStream, IntoTokenStream, Lable};
+    use crate::{ParserEntry, ParseTree, Parser, CharStream, IntoTokenStream, Label};
 
     use super::Grammar;
 
@@ -737,7 +737,7 @@ mod test {
             Times
         }
 
-        impl Lable<Tokens> for char
+        impl Label<Tokens> for char
         {
             fn get_label(value: &Tokens) -> Self {
                 match value {
