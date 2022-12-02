@@ -52,7 +52,7 @@ impl Inexhaustible for char {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RuleStr<Nt, Tok> (Vec<Either<Nt, Tok>>);
 
 impl<Nt, Tok, T> From<T> for RuleStr<Nt, Tok>
